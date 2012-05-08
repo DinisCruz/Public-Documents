@@ -1,0 +1,172 @@
+{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fmodern\fprq1\fcharset0 Courier New;}{\f2\fnil\fcharset0 Microsoft Sans Serif;}}
+{\colortbl ;\red0\green0\blue255;\red0\green0\blue128;\red0\green100\blue0;\red25\green25\blue112;\red0\green0\blue0;\red0\green139\blue139;\red255\green0\blue0;\red0\green128\blue0;\red0\green0\blue139;}
+{\*\generator Msftedit 5.41.21.2510;}\viewkind4\uc1\pard\sa200\sl276\slmult1\lang9\f0\fs22 Adding Support for OData to o2\par
+In this series of posts we are going to add support for OData to O2.\par
+For reference here is the OData website: {\field{\*\fldinst{HYPERLINK "http://www.odata.org/"}}{\fldrslt{\ul\cf1 http://www.odata.org/}}}\f0\fs22  and here is the .NET library to use : WCF Data Services 5.0 for OData V3  {\field{\*\fldinst{HYPERLINK "http://www.microsoft.com/en-us/download/details.aspx?id=29306"}}{\fldrslt{\ul\cf1 http://www.microsoft.com/en-us/download/details.aspx?id=29306}}}\f0\fs22\par
+\par
+First thing I did was to install the WCF Data Services 5.0 for OData V3 locally which installs these dlls in the GAC\par
+{\field{\*\fldinst{HYPERLINK "https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_12_24_36_AM.jpg"}}{\fldrslt{\ul\cf1 https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_12_24_36_AM.jpg}}}\f0\fs22\par
+and can now be accessed direcly on our script using: \par
+\cf2\lang1031\f1\fs18 return \cf1 "Microsoft.Data.OData.dll"\cf3 .\cf4\b assembly\cf3\b0 ();\par
+\cf0\lang9\f0\fs22\par
+\b Consuming data from {\field{\*\fldinst{HYPERLINK "http://services.odata.org/OData/OData.svc"}}{\fldrslt{\ul\cf1 http://services.odata.org/OData/OData.svc}}}\b0\f0\fs22\par
+Lets use as a first example the sample service provided by OData called '\i Read-Only OData Sample Service' \i0 ,  described as '\i A simple model (Categories/Products/Suppliers) exposed via a Read-Only OData service.' \i0 and available at \b{\field{\*\fldinst{HYPERLINK "http://services.odata.org/OData/OData.svc"}}{\fldrslt{\ul\cf1 http://services.odata.org/OData/OData.svc}}}\b0\f0\fs22\par
+In odata the schema is available via  appending $metadata to to URL ({\field{\*\fldinst{HYPERLINK "http://services.odata.org/OData/OData.svc/$metadata"}}{\fldrslt{\ul\cf1 http://services.odata.org/OData/OData.svc/$metadata}}}\f0\fs22 ) so the first step is to use the \cf1\lang1031\f1\fs18 DataSvcUtil \cf0\lang9\f0\fs22 tool to create the C# proxy class.\par
+\b Invoking \cf1\lang1031\f1\fs18 DataSvcUtil:\b0\par
+\pard\cf2 var \cf5 installFolder \cf3 = \cf1 @"C:\\Program Files\\Microsoft WCF Data Services\\5.0\\bin\\.NETFramework"\cf3 ;\par
+\par
+\cf2 var \cf5 dataSvcUtil \cf3 = \cf5 installFolder\cf3 .\cf4\b pathCombine\cf3\b0 (\cf1 "DataSvcUtil"\cf3 );\par
+\cf2 return \cf5 dataSvcUtil\cf3 .\cf4\b startProcess_getConsoleOut\cf3\b0 ();\cf0\lang9\f0\fs22\par
+\pard\sa200\sl276\slmult1\par
+\b Viewing the help \b0\par
+\pard\cf2\lang1031\f1\fs18 var \cf5 installFolder \cf3 = \cf1 @"C:\\Program Files\\Microsoft WCF Data Services\\5.0\\bin\\.NETFramework"\cf3 ;\par
+\cf2 var \cf5 dataSvcUtil \cf3 = \cf5 installFolder\cf3 .\cf4\b pathCombine\cf3\b0 (\cf1 "DataSvcUtil"\cf3 );\par
+\cf2 var \cf5 arguments \cf3 = \cf1 "/help"\cf3 ;\par
+\cf2 return \cf5 dataSvcUtil\cf3 .\cf4\b startProcess_getConsoleOut\cf3\b0 (\cf5 arguments\cf3 );\par
+\pard\sa200\sl276\slmult1\cf0\lang9\f0\fs22\par
+\b Creating the C# File into a local temp folder\b0\par
+\pard\cf2\lang1031\f1\fs18 var \cf5 installFolder \cf3 = \cf1 @"C:\\Program Files\\Microsoft WCF Data Services\\5.0\\bin\\.NETFramework"\cf3 ;\par
+\cf2 var \cf5 dataSvcUtil \cf3 = \cf5 installFolder\cf3 .\cf4\b pathCombine\cf3\b0 (\cf1 "DataSvcUtil"\cf3 );\par
+\cf2 var \cf5 tempFolder \cf3 = \cf1 "_oData_Tests"\cf3 .\cf4\b tempDir\cf3\b0 (\cf6\b false\cf3\b0 ); \par
+\par
+\cf2 var \cf5 odataUri \cf3 = \cf1 "{\field{\*\fldinst{HYPERLINK "http://services.odata.org/OData/OData.svc"}}{\fldrslt{\ul\cf1 http://services.odata.org/OData/OData.svc}}}\f1\fs18 "\cf3 ;\par
+\cf2 var \cf5 csFile \cf3 = \cf5 tempFolder\cf3 .\cf4\b pathCombine\cf3\b0 (\cf1 "odataTest.cs"\cf3 );\par
+\cf2 var \cf5 arguments \cf3 = \cf1 "/out:\\"\{0\}\\" /uri:\{1\}"\cf3 .\cf4\b format\cf3\b0 (\cf5 csFile\cf3 ,\cf5 odataUri\cf3 );\par
+\pard\sa200\sl276\slmult1\cf2 return \cf5 dataSvcUtil\cf3 .\cf4\b startProcess_getConsoleOut\cf3\b0 (\cf5 arguments\cf3 );\cf0\lang9\f0\fs22\par
+The script above returns this error message from DataSvcUtil:\par
+\pard\cf5\lang1033\f2\fs17 Microsoft (R) DataSvcUtil version 5.0.0.0\par
+Copyright (C) 2008 Microsoft Corporation. All rights reserved.\par
+\par
+Writing object layer file...\par
+error 7001: The metadata document cannot be used to generate code that is compatible with version '1.0' because the 'DataServiceVersion' attribute of the 'DataServices' element has a value of '2.0'. The version specified for code generation must be greater than or equal to the version specified by the metadata document.\par
+\par
+Generation Complete -- 1 errors, 0 warnings\par
+\pard\sa200\sl276\slmult1\cf0\lang9\f0\fs22\par
+which can be solved by adding the \i /version:2.0\i0  parameter\par
+\pard\cf2\lang1031\f1\fs18 var \cf5 arguments \cf3 = \cf1 "/version:2.0 /out:\\"\{0\}\\" /uri:\{1\}"\cf3 .\cf4\b format\cf3\b0 (\cf5 csFile\cf3 ,\cf5 odataUri\cf3 );\par
+\par
+\pard\sa200\sl276\slmult1\cf2 return \cf5 dataSvcUtil\cf3 .\cf4\b startProcess_getConsoleOut\cf3\b0 (\cf5 arguments\cf3 );\cf0\lang9\f0\fs22\par
+we now get \par
+\pard\cf5\lang1033\f2\fs17 Microsoft (R) DataSvcUtil version 5.0.0.0\par
+Copyright (C) 2008 Microsoft Corporation. All rights reserved.\par
+\par
+Writing object layer file...\par
+\par
+Generation Complete -- 0 errors, 0 warnings\cf0\lang9\f0\fs22\par
+\pard\sa200\sl276\slmult1\line\b Let's just quickly refactor this into a Lambda method \b0\par
+\pard\cf5\lang1031\f1\fs18 Func\cf3 <\cf5 Uri\cf3 ,\cf7 string\cf3 ,\cf7\b bool\cf3\b0 > \cf5 createODataCSharpFile \cf3 = \par
+\tab (\cf5 odataUri\cf3 , \cf5 targetFile\cf3 )=>\tab\{\par
+\tab\par
+\tab\tab\tab\tab\tab\tab\tab\cf2 var \cf5 installFolder \cf3 = \cf1 @"C:\\Program Files\\Microsoft WCF Data Services\\5.0\\bin\\.NETFramework"\cf3 ;\par
+\tab\tab\tab\tab\tab\tab\tab\cf2 var \cf5 dataSvcUtil \cf3 = \cf5 installFolder\cf3 .\cf4\b pathCombine\cf3\b0 (\cf1 "DataSvcUtil"\cf3 );\par
+\tab\tab\tab\tab\tab\tab\tab\cf2 var \cf5 arguments \cf3 = \cf1 "/version:2.0 /out:\\"\{0\}\\" /uri:\{1\}"\cf3 .\cf4\b format\cf3\b0 (\cf5 targetFile\cf3 ,\cf5 odataUri\cf3 );\par
+\tab\tab\tab\tab\tab\tab\tab\cf2 var \cf5 consoleOut \cf3 = \cf5 dataSvcUtil\cf3 .\cf4\b startProcess_getConsoleOut\cf3\b0 (\cf5 arguments\cf3 );\par
+\tab\tab\tab\tab\tab\tab\tab\cf2 return \cf5 consoleOut\cf3 .\cf4\b contains\cf3\b0 (\cf1 "0 errors"\cf3 );\par
+\tab\tab\tab\tab\tab\tab\};\par
+\par
+\par
+\cf2 var \cf5 tempFolder \cf3 = \cf1 "_oData_Tests"\cf3 .\cf4\b tempDir\cf3\b0 (\cf6\b false\cf3\b0 ); \par
+\par
+\cf2 var \cf5 testUri \cf3 = \cf1 "{\field{\*\fldinst{HYPERLINK "http://services.odata.org/OData/OData.svc".uri"}}{\fldrslt{\ul\cf1 http://services.odata.org/OData/OData.svc"\cf3 .\cf4\b uri}}}\cf3\b0\f1\fs18 ();\par
+\cf2 var \cf5 csFile \cf3 = \cf5 tempFolder\cf3 .\cf4\b pathCombine\cf3\b0 (\cf1 "odataTest.cs"\cf3 );\par
+\par
+\pard\sa200\sl276\slmult1\cf2 return \cf4\b createODataCSharpFile\cf3\b0 (\cf5 testUri\cf3 ,\cf5 csFile\cf3 );\cf0\lang9\f0\fs22\par
+Let take a look at the created C# file:\par
+\pard\cf2\lang1031\f1\fs18 var \cf5 tempFolder \cf3 = \cf1 "_oData_Tests"\cf3 .\cf4\b tempDir\cf3\b0 (\cf6\b false\cf3\b0 ); \par
+\par
+\cf2 var \cf5 testUri \cf3 = \cf1 "{\field{\*\fldinst{HYPERLINK "http://services.odata.org/OData/OData.svc".uri"}}{\fldrslt{\ul\cf1 http://services.odata.org/OData/OData.svc"\cf3 .\cf4\b uri}}}\cf3\b0\f1\fs18 ();\par
+\cf2 var \cf5 csFile \cf3 = \cf5 tempFolder\cf3 .\cf4\b pathCombine\cf3\b0 (\cf1 "odataTest.cs"\cf3 );\par
+\par
+\cf1\b if \cf3\b0 (\cf4\b createODataCSharpFile\cf3\b0 (\cf5 testUri\cf3 ,\cf5 csFile\cf3 ))\par
+\{\par
+\tab\cf5 panel\cf3 .\cf4\b add_SourceCodeEditor\cf3\b0 ().\cf4\b open\cf3\b0 (\cf5 csFile\cf3 );\par
+\}\par
+\pard\sa200\sl276\slmult1\cf0\lang9\f0\fs22\par
+Now if you try to compile that code (using that O2 GUI) you will get the following errors:\par
+{\field{\*\fldinst{HYPERLINK "https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_1_30_31_AM.jpg"}}{\fldrslt{\ul\cf1 https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_1_30_31_AM.jpg}}}\f0\fs22\par
+which means that we need to add the reference to the dll that contains the \cf5\lang1031\i\f1\fs18 System\cf3 .\cf5 Data\cf3 .\cf5 Services\cf3 .\cf5 Client\cf3 .\cf5 DataServiceQuery\i0  \cf0\lang9\f0\fs22 class, which one of the dlls installed by WCF 5.0 \par
+In O2 you can add references using the syntax:\par
+\cf8\lang1031\f1\fs18 //O2Ref:System.Data.Services.Client.dll\cf0\lang9\f0\fs22\par
+And after adding it, the compilation works\par
+{\field{\*\fldinst{HYPERLINK "https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_1_32_56_AM.jpg"}}{\fldrslt{\ul\cf1 https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_1_32_56_AM.jpg}}}\f0\fs22\par
+In order to make this fix perment, lets add it to our lamdba method:\par
+\pard\cf5\lang1031\f1\fs18 Func\cf3 <\cf5 Uri\cf3 ,\cf7 string\cf3 ,\cf7\b bool\cf3\b0 > \cf5 createODataCSharpFile \cf3 = \par
+\tab (\cf5 odataUri\cf3 , \cf5 targetFile\cf3 )=>\tab\{\par
+\tab\par
+\tab\tab\tab\tab\tab\tab\tab\cf2 var \cf5 installFolder \cf3 = \cf1 @"C:\\Program Files\\Microsoft WCF Data Services\\5.0\\bin\\.NETFramework"\cf3 ;\par
+\tab\tab\tab\tab\tab\tab\tab\cf2 var \cf5 dataSvcUtil \cf3 = \cf5 installFolder\cf3 .\cf4\b pathCombine\cf3\b0 (\cf1 "DataSvcUtil"\cf3 );\par
+\tab\tab\tab\tab\tab\tab\tab\cf2 var \cf5 arguments \cf3 = \cf1 "/version:2.0 /out:\\"\{0\}\\" /uri:\{1\}"\cf3 .\cf4\b format\cf3\b0 (\cf5 targetFile\cf3 ,\cf5 odataUri\cf3 );\par
+\tab\tab\tab\tab\tab\tab\tab\cf2 var \cf5 consoleOut \cf3 = \cf5 dataSvcUtil\cf3 .\cf4\b startProcess_getConsoleOut\cf3\b0 (\cf5 arguments\cf3 );\par
+\tab\tab\tab\tab\tab\tab\tab\cf1\b if \cf3\b0 (\cf5 consoleOut\cf3 .\cf4\b contains\cf3\b0 (\cf1 "0 errors"\cf3 ))\par
+\tab\tab\tab\tab\tab\tab\tab\{\par
+\tab\tab\tab\tab\tab\tab\tab\tab\cf5 targetFile\cf3 .\cf4\b fileInsertAt\cf3\b0 (\cf9 0\cf3 ,\cf1 "//O2Ref:System.Data.Services.Client.dll"\cf3 .\cf4\b line\cf3\b0 ());\par
+\tab\tab\tab\tab\tab\tab\tab\tab\cf2 return \cf6\b true\cf3\b0 ;\par
+\tab\tab\tab\tab\tab\tab\tab\}\par
+\tab\tab\tab\tab\tab\tab\tab\cf2 return \cf6\b false\cf3\b0 ;\par
+\pard\sa200\sl276\slmult1\tab\tab\tab\tab\tab\tab\};\cf0\lang9\f0\fs22\par
+\b Gui to create OData C# files\b0\par
+To make this more useful, lets create a GUI to create OData C# Files\par
+\b First lets add the GUI components\b0\par
+\pard\cf2\lang1031\f1\fs18 var \cf5 topPanel \cf3 = \cf5 panel\cf3 .\cf4\b clear\cf3\b0 ().\cf4\b add_Panel\cf3\b0 ();\par
+\cf2 var \cf5 codeEditor \cf3 = \cf5 topPanel\cf3 .\cf4\b title\cf3\b0 (\cf1 "C# Code"\cf3 ).\cf4\b add_SourceCodeEditor\cf3\b0 ();\par
+\cf2 var \cf5 files \cf3 = \cf5 topPanel\cf3 .\cf4\b insert_Left\cf3\b0 (\cf1 "C# files"\cf3 ).\cf4\b add_TreeView\cf3\b0 ();\par
+\pard\sa200\sl276\slmult1\cf2 var \cf5 uri \cf3 = \cf5 files\cf3 .\cf4\b insert_Above\cf3\b0 (\cf9 40\cf3 ,\cf1 "URI to convert"\cf3 ).\cf4\b add_TextBox\cf3\b0 ().\cf4\b align_Right\cf3\b0 (\cf5 files\cf3 );\cf0\lang9\f0\fs22\par
+{\field{\*\fldinst{HYPERLINK "https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_1_44_06_AM.jpg"}}{\fldrslt{\ul\cf1 https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_1_44_06_AM.jpg}}}\f0\fs22\par
+\b next load existing files and show them when selected:\par
+\pard\cf2\lang1031\b0\f1\fs18 var \cf5 topPanel \cf3 = \cf5 panel\cf3 .\cf4\b clear\cf3\b0 ().\cf4\b add_Panel\cf3\b0 ();\par
+\cf2 var \cf5 codeEditor \cf3 = \cf5 topPanel\cf3 .\cf4\b title\cf3\b0 (\cf1 "C# Code"\cf3 ).\cf4\b add_SourceCodeEditor\cf3\b0 ();\par
+\cf2 var \cf5 files \cf3 = \cf5 topPanel\cf3 .\cf4\b insert_Left\cf3\b0 (\cf9 200\cf3 ,\cf1 "C# files"\cf3 ).\cf4\b add_TreeView\cf3\b0 ();\par
+\cf2 var \cf5 uri \cf3 = \cf5 files\cf3 .\cf4\b insert_Above\cf3\b0 (\cf9 40\cf3 ,\cf1 "URI to convert (press enter to create)"\cf3 ).\cf4\b add_TextBox\cf3\b0 ().\cf4\b align_Right\cf3\b0 (\cf5 files\cf3 );\par
+\par
+\cf5 files\cf3 .\cf4\b add_Files\cf3\b0 (\cf5 tempFolder\cf3 )\tab\par
+\tab  .\cf5 afterSelect\cf3 <\cf7 string\cf3 >((\cf5 file\cf3 )=> \cf5 codeEditor\cf3 .\cf4\b open\cf3\b0 (\cf5 file\cf3 ))\par
+\pard\sa200\sl276\slmult1\tab  .\cf4\b selectFirst\cf3\b0 ();\cf0\lang9\f0\fs22\par
+\b And invoke the lamdba method when a new uri is entered:\b0\par
+\pard\cf5\lang1031\f1\fs18 uri\cf3 .\cf4\b onEnter\cf3\b0 (\par
+\tab (\cf5 text\cf3 )=>\{\par
+\tab\tab\tab\tab\cf1\b if \cf3\b0 (\cf5 text\cf3 .\cf4\b isUri\cf3\b0 ())\par
+\tab\tab\tab\tab\{\tab\tab\tab\tab\par
+\tab\tab\tab\tab\tab\cf2 var \cf5 fileName \cf3 = \cf5 text\cf3 .\cf4\b safeFileName\cf3\b0 ();\par
+\tab\tab\tab\tab\tab\cf2 var \cf5 filePath \cf3 = \cf5 tempFolder\cf3 .\cf4\b pathCombine\cf3\b0 (\cf5 fileName\cf3 );\par
+\tab\tab\tab\tab\tab\cf1\b if\cf3\b0 (\cf4\b createODataCSharpFile\cf3\b0 (\cf5 text\cf3 .\cf4\b uri\cf3\b0 (), \cf5 filePath\cf3 ))\par
+\tab\tab\tab\tab\tab\tab\cf5 files\cf3 .\cf4\b add_Node\cf3\b0 (\cf5 fileName\cf3 , \cf5 filePath\cf3 )\par
+\tab\tab\tab\tab\tab\tab\tab  .\cf4\b selected\cf3\b0 ();\par
+\tab\tab\tab\tab\}\tab\tab\tab\tab\tab\par
+\tab\tab\tab\});\par
+\tab\tab\tab\par
+\pard\sa200\sl276\slmult1\cf5 uri\cf3 .\cf4\b set_Text\cf3\b0 (\cf1 "http://services.odata.org/OData/OData.svc"\cf3 );\cf0\lang9\f0\fs22  \par
+\b Its good to give the user a visual clue that something is happening:\par
+\b0 Let's make the textbox pink and run the conversion in a new thread\par
+\pard\cf5\lang1031\f1\fs18 uri\cf3 .\cf4\b onEnter\cf3\b0 (\par
+\tab (\cf5 text\cf3 )=>\{\par
+\tab\tab\tab\tab\cf1\b if \cf3\b0 (\cf5 text\cf3 .\cf4\b isUri\cf3\b0 ())\par
+\tab\tab\tab\tab\{\tab\tab\tab\tab\par
+\tab\tab\tab\tab\tab\cf5 uri\cf3 .\cf4\b pink\cf3\b0 ();\par
+\tab\tab\tab\tab\tab\cf5 O2Thread\cf3 .\cf4\b mtaThread\cf3\b0 (\par
+\tab\tab\tab\tab\tab\tab ()=>\{\par
+\tab\tab\tab\tab\tab\tab\tab\tab\cf2 var \cf5 fileName \cf3 = \cf5 text\cf3 .\cf4\b safeFileName\cf3\b0 () + \cf1 ".cs"\cf3 ;\par
+\tab\tab\tab\tab\tab\tab\tab\tab\cf2 var \cf5 filePath \cf3 = \cf5 tempFolder\cf3 .\cf4\b pathCombine\cf3\b0 (\cf5 fileName\cf3 );\par
+\tab\tab\tab\tab\tab\tab\tab\tab\cf1\b if\cf3\b0 (\cf4\b createODataCSharpFile\cf3\b0 (\cf5 text\cf3 .\cf4\b uri\cf3\b0 (), \cf5 filePath\cf3 ))\par
+\tab\tab\tab\tab\tab\tab\tab\tab\tab\cf5 files\cf3 .\cf4\b add_Node\cf3\b0 (\cf5 fileName\cf3 , \cf5 filePath\cf3 )\par
+\tab\tab\tab\tab\tab\tab\tab\tab\tab\tab  .\cf4\b selected\cf3\b0 ();\par
+\tab\tab\tab\tab\tab\tab\tab\tab\cf5 uri\cf3 .\cf4\b white\cf3\b0 ();\tab\tab\par
+\tab\tab\tab\tab\tab\tab\tab\});\par
+\tab\tab\tab\tab\}\tab\tab\tab\tab\tab\par
+\pard\sa200\sl276\slmult1\tab\tab\tab\});\cf0\lang9\f0\fs22\par
+{\field{\*\fldinst{HYPERLINK "https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_2_00_43_AM.jpg"}}{\fldrslt{\ul\cf1 https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_2_00_43_AM.jpg}}}\f0\fs22\par
+\b Final step is to make this a stand alone tool\b0\par
+which  is simply done by replacing \par
+\cf2\lang1031\f1\fs18 var \cf5 topPanel \cf3 = \cf5 panel\cf3 .\cf4\b clear\cf3\b0 ().\cf4\b add_Panel\cf3\b0 ();\par
+\cf0\lang9\f0\fs22 with\par
+\pard\cf8\lang1031\f1\fs18 //var topPanel = panel.clear().add_Panel();\par
+\pard\sa200\sl276\slmult1\cf2 var \cf5 topPanel \cf3 = \cf1 "Util - Create C# for OData Service"\cf3 .\cf4\b popupWindow\cf3\b0 (\cf9 600\cf3 ,\cf9 400\cf3 );\par
+\cf0\lang9\f0\fs22 now, when you execute this script you will get WinForm:\par
+{\field{\*\fldinst{HYPERLINK "https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_2_09_03_AM.jpg"}}{\fldrslt{\ul\cf1 https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_2_09_03_AM.jpg}}}\f0\fs22\par
+\b Save file as H2 file\par
+\b0 And if you save the script (from the Script editor) as an *.h2 file, you will be able to invoke it via the windows explorer:\par
+{\field{\*\fldinst{HYPERLINK "https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_2_12_39_AM.jpg"}}{\fldrslt{\ul\cf1 https://github.com/DinisCruz/Images/raw/master/images/5_8_2012_2_12_39_AM.jpg}}}\f0\fs22\par
+.\par
+.\par
+.\par
+}
+ 
